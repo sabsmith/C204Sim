@@ -226,16 +226,16 @@ const DIMENSIONS = [
   },
   {
     id: "visibility", legend: "C · Visibility & loyalty",
-    hint: "How do new customers find SuitShop on a lean marketing budget?",
+    hint: "How should SuitShop reach new customers — and give them a reason to come back — on a lean budget?",
     options: [
-      { id: "loyalty", label: "Launch a loyalty program",
-        desc: "Rewards for repeat buyers and wedding-party alumni; first program in the category." },
-      { id: "influencer", label: "Influencer & event engine",
-        desc: "Double down on donations, organic reach, and press; scale what already works." },
-      { id: "showrooms", label: "Accelerate showrooms",
-        desc: "Open 3-4 locations a year instead of 2-3; physical presence lifts regional sales." },
-      { id: "ai", label: "AI-guided shopping",
-        desc: "Expand the chatbot into fit guidance and AI-generated product pages; cheap reach, brand risk." }
+      { id: "partners", label: "Partner with wedding services & apps",
+        desc: "Plug into planners, venues, and wedding apps so couples discover SuitShop where they already plan the day." },
+      { id: "popups", label: "Launch campus pop-up shops",
+        desc: "Take the fitting room to campus: pop-up shops where business students buy their first professional suit." },
+      { id: "stylequiz", label: "Add an AI-powered style quiz",
+        desc: "A website quiz that learns each customer's style and points them to the right fit — cheap reach, some brand risk." },
+      { id: "rewear", label: "Launch a wear-it-again loyalty program",
+        desc: "Rewards that help wedding-suit buyers restyle their purchase for work and weekends — the suit's second life." }
     ]
   },
   {
@@ -279,10 +279,10 @@ const OPT_EFFECTS = {
     core:     { reach:1.00, repeat:1.00, margin:1.00, inv:1.10, brand:1.00, ops:1.00 }
   },
   visibility: {
-    loyalty:   { reach:1.05, repeat:1.30, margin:0.95, inv:1.00, brand:1.05, ops:1.10 },
-    influencer:{ reach:1.20, repeat:1.00, margin:1.00, inv:1.00, brand:1.10, ops:1.00 },
-    showrooms:{ reach:1.25, repeat:1.05, margin:0.85, inv:1.00, brand:1.05, ops:1.30 },
-    ai:        { reach:1.15, repeat:1.00, margin:1.05, inv:1.00, brand:0.85, ops:1.05 }
+    partners:  { reach:1.20, repeat:1.05, margin:0.95, inv:1.00, brand:1.05, ops:1.05 },
+    popups:    { reach:1.25, repeat:0.95, margin:0.90, inv:1.00, brand:1.05, ops:1.25 },
+    stylequiz: { reach:1.15, repeat:1.00, margin:1.05, inv:1.00, brand:0.85, ops:1.05 },
+    rewear:    { reach:1.00, repeat:1.30, margin:0.95, inv:1.00, brand:1.10, ops:1.10 }
   },
   pricing: {
     hold:    { reach:1.05, repeat:1.05, margin:0.90, inv:1.00, brand:1.10, ops:1.00 },
@@ -294,16 +294,19 @@ const OPT_EFFECTS = {
 
 /* Synergy and conflict rules: [engine, product, visibility, pricing] */
 const COMBOS = [
-  { when:{engine:"young", visibility:"influencer"}, kind:"syn", text:"Campus ambassadors + influencer engine reinforce each other: organic reach compounds among students who trust peers over ads." },
+  { when:{engine:"young", visibility:"popups"}, kind:"syn", text:"Campus pop-ups put the young-professional strategy where it lives: students meet the brand on their own turf, and first-suit buyers convert in person." },
   { when:{engine:"b2b", pricing:"tier"}, kind:"syn", text:"Corporate contracts at tiered price points create predictable B2B revenue that smooths seasonal wedding swings." },
   { when:{engine:"wedding", product:"capsule"}, kind:"syn", text:"Capsule collections give wedding parties coordinated accessories — raising average order value without new inventory categories." },
-  { when:{engine:"hybrid", visibility:"showrooms"}, kind:"conf", text:"Piloting a new audience while accelerating showrooms splits a lean team's attention and capital; both moves slow down." },
+  { when:{engine:"hybrid", visibility:"popups"}, kind:"conf", text:"Piloting a new audience while running campus pop-ups splits a lean team's attention and logistics; both moves slow down." },
   { when:{product:"lifestyle", pricing:"hold"}, kind:"conf", text:"Lifestyle pieces carry thinner margins than suiting; holding prices under $200 while expanding SKUs squeezes cash for reorders." },
-  { when:{product:"lifestyle", visibility:"showrooms"}, kind:"conf", text:"More SKUs across more showrooms is the classic lean-inventory trap: stock depth per location falls or carrying costs climb." },
-  { when:{visibility:"ai", pricing:"premium"}, kind:"conf", text:"AI-guided shopping trained on wedding-party data will misfire on premium buyers; expect fit errors and returns to climb." },
+  { when:{product:"lifestyle", visibility:"popups"}, kind:"conf", text:"Pop-up shops carrying broad lifestyle SKUs is the lean-inventory trap on wheels: every location needs stock depth it cannot hold." },
+  { when:{visibility:"stylequiz", pricing:"premium"}, kind:"conf", text:"A style quiz trained on wedding-party data will misread premium buyers; expect style misses, returns, and a support load your lean team feels." },
   { when:{engine:"b2b", product:"mto"}, kind:"conf", text:"B2B buyers need uniform, repeatable orders; Made-to-Order lead times clash with corporate procurement timelines." },
-  { when:{visibility:"loyalty", engine:"young"}, kind:"syn", text:"A first-of-its-kind loyalty program gives students a reason to return for the second suit — the career one — not just the first." },
-  { when:{pricing:"premium", engine:"wedding"}, kind:"conf", text:"Wedding parties compare total cost across five to ten members; premium pricing pushes group coordinators toward rental rivals." }
+  { when:{visibility:"rewear", engine:"young"}, kind:"syn", text:"A wear-it-again program gives first-suit buyers a reason to come back for the career suit — the second purchase this segment rarely makes." },
+  { when:{pricing:"premium", engine:"wedding"}, kind:"conf", text:"Wedding parties compare total cost across five to ten members; premium pricing pushes group coordinators toward rental rivals." },
+  { when:{engine:"wedding", visibility:"partners"}, kind:"syn", text:"Wedding-service partnerships put SuitShop inside the planner's workflow — the core segment gets a new front door without ad spend." },
+  { when:{visibility:"rewear", product:"lifestyle"}, kind:"syn", text:"A wear-it-again program needs pieces that live beyond the wedding; lifestyle pieces give alumni something to restyle toward." },
+  { when:{visibility:"partners", pricing:"bundle"}, kind:"syn", text:"Planner and venue partnerships feed group business, and bundling closes the parties they send — the two reinforce each other." }
 ];
 
 /* ================= STRESS TEST EVENTS =================
@@ -329,9 +332,10 @@ const EVENTS = [
     blurb:"Generation Tux rolls out a points-based rewards program with a splashy wedding-season campaign.",
     applies:s=>true,
     outcome:s=>{
-      if(s.visibility==="loyalty") return {k:"bruised", t:"Your program is no longer a first — the press angle is gone. But second-mover programs can copy mechanics and fix mistakes: yours can still be the one that fits SuitShop's brand.", fb:"The Recommendation should not rest on 'first loyalty program in suiting.' Rest it on why rewards fit SuitShop's customer relationships specifically."};
-      if(s.visibility==="influencer") return {k:"held", t:"You never bet on loyalty; your influencer and event engine is untouched. The competitor's program costs them margin every quarter — watch whether it survives year two.", fb:"Consider a line noting you deliberately skipped loyalty: what evidence says organic reach beats paid retention for this brand?"};
-      return {k:"bruised", t:"Without a loyalty play of your own, repeat wedding-party alumni have a new reason to join a competitor's ecosystem. Your repeat rate dips among 2025's customers.", fb:"If you argue loyalty isn't worth it, defend that choice in the counterarguments section — the client is clearly interested (the case says so)."};
+      if(s.visibility==="rewear") return {k:"bruised", t:"A competitor's points program launches first and takes the 'first in category' press angle. But points-for-discounts is not a second life for the suit — your program answers a different question, and second movers can copy mechanics and fix mistakes.", fb:"The Recommendation should not rest on being first. Rest it on why a wear-it-again program fits SuitShop's customers specifically — and what your program does that points cannot."};
+      if(s.visibility==="stylequiz"||s.visibility==="partners") return {k:"held", t:"You never bet on a points program; your acquisition channels are untouched, and the competitor now carries loyalty costs every quarter — watch whether it survives year two.", fb:"Consider a line noting you deliberately skipped loyalty: what evidence says acquisition beats paid retention for this brand?"};
+      if(s.visibility==="popups") return {k:"held", t:"Campus buyers are early in their suit lifecycle; a points program matters less to someone choosing a first suit. Your pop-up funnel is untouched — for now.", fb:"If you argue loyalty can wait, defend that choice in the counterarguments section — the client is clearly interested (the case says so)."};
+      return {k:"bruised", t:"Without a loyalty play of your own, repeat wedding-party alumni have a new reason to join a competitor's ecosystem. Your repeat rate dips among recent customers.", fb:"If you argue loyalty isn't worth it, defend that choice in the counterarguments section — the client is clearly interested (the case says so)."};
     }
   },
   {
@@ -352,29 +356,30 @@ const EVENTS = [
     blurb:"Several large employers announce permanent hybrid-lite policies; 'first professional suit' demand softens in your growth forecasts.",
     applies:s=>s.engine==="young",
     outcome:s=>{
-      if(s.engine==="young" && s.visibility==="influencer") return {k:"bruised", t:"Campus-first demand cools just as your ambassador cohort matures. The influencer engine keeps reach up but conversion of first-suit buyers dips.", fb:"Your market-size claim for young professionals needs a sensitivity range. What share of the segment still needs occasion suits (weddings, interviews, promotions) regardless of office policy?"};
+      if(s.engine==="young" && s.visibility==="popups") return {k:"bruised", t:"Campus-first demand cools just as your pop-up calendar fills. The pop-ups keep reach up, but conversion of first-suit buyers dips as students rethink the wardrobe.", fb:"Your market-size claim for young professionals needs a sensitivity range. What share of the segment still needs occasion suits (weddings, interviews, promotions) regardless of office policy?"};
       if(s.engine==="young" && s.product==="lifestyle") return {k:"held", t:"Lifestyle pieces were never office-dependent — the wardrobe extension carries the year while first-suit demand lags. Your two-part bet diversifies the risk.", fb:"This is a strong argument for the lifestyle pairing: make the diversification logic explicit in the What/Why/How rather than leaving readers to infer it."};
       return {k:"bruised", t:"The young-professional thesis takes a direct hit. Reach flattens; the segment you chose as the growth engine proves softer than projected.", fb:"Hedge the thesis in the report: cite return-to-office data both ways, and show what happens to the recommendation if office-wear demand grows at half the projected rate."};
     }
   },
   {
     id:"ai_misfit", when:"Year 2 · Q4",
-    title:"The AI shopping assistant misfires",
-    blurb:"Scaled-up AI fit guidance recommends wrong sizes for non-standard body types; complaints spike and a viral thread mocks the brand's inclusivity promise.",
-    applies:s=>s.visibility==="ai"||s.product==="lifestyle",
+    title:"The AI style quiz misfires",
+    blurb:"The style quiz scaled to the full site recommends looks that miss for non-standard body types; complaints spike and a viral thread mocks the brand's inclusivity promise.",
+    applies:s=>s.visibility==="stylequiz"||s.product==="lifestyle",
     outcome:s=>{
-      if(s.visibility==="ai") return {k:"exposed", t:"The tool you scaled becomes the story. For a brand whose identity is inclusive fit, an AI that fails on diverse bodies is a brand-distinctiveness crisis, not a tech bug.", fb:"If AI-guided shopping is in your recommendation, the Implementation section must include training-data limits, human handoff, and a rollback plan. Address the inclusivity objection before the client asks."};
+      if(s.visibility==="stylequiz") return {k:"exposed", t:"The tool you scaled becomes the story. For a brand whose identity is inclusive fit, a style quiz that fails on diverse bodies is a brand-distinctiveness crisis, not a tech bug.", fb:"If the AI style quiz is in your recommendation, the Implementation section must include training-data limits, human review, and a rollback plan. Address the inclusivity objection before the client asks."};
       return {k:"bruised", t:"The episode lands industry-wide. Broader lifestyle SKUs mean more fit variables, and your exchange volume ticks up during the noise.", fb:"Use this in the counterargument section: broader assortment raises fit complexity. What in your plan keeps exchanges free and easy — the actual brand promise?"};
     }
   },
   {
-    id:"showroom_econ", when:"Year 3 · Q1",
-    title:"Showroom economics tighten",
-    blurb:"Retail rents in growth cities rise sharply; two competitors quietly close their own showrooms.",
-    applies:s=>s.visibility==="showrooms",
+    id:"popup_econ", when:"Year 3 · Q1",
+    title:"Campus pop-up economics tighten",
+    blurb:"University retail-space fees and staffing costs climb mid-pilot; two competitors quietly end their campus programs.",
+    applies:s=>s.visibility==="popups",
     outcome:s=>{
-      if(s.pricing==="tier"||s.pricing==="premium") return {k:"held", t:"Higher-margin tiers cushion the rent increase. Your showrooms stay open, but the episode proves they are only affordable with margin structure behind them.", fb:"Connect the dots in the Argument: showrooms + premium tiers is a package deal. If you recommend both, say the quiet part — one funds the other."};
-      return {k:"exposed", t:"Rent inflation lands on a sub-$200 price architecture. Two planned openings pause; the 'showrooms lift regional sales' thesis stalls mid-build-out.", fb:"Your Implementation timeline needs a go/no-go gate per location: what minimum regional sales lift justifies the next lease? Put the threshold in the report."};
+      if(s.pricing==="tier"||s.pricing==="premium") return {k:"held", t:"Higher-margin tiers cushion the rising campus fees. Your pop-up program survives, but the episode proves it is only affordable with margin structure behind it.", fb:"Connect the dots in the Argument: pop-ups + premium tiers is a package deal. If you recommend both, say the quiet part — one funds the other."};
+      if(s.engine==="young") return {k:"bruised", t:"The pop-up is your growth engine's front door, so the cost squeeze lands where you live. Two planned campus dates pause while you renegotiate rates.", fb:"Your Implementation timeline needs a go/no-go gate per campus: what minimum first-suit conversion justifies the next pop-up? Put the threshold in the report."};
+      return {k:"exposed", t:"Rising campus fees land on a sub-$200 price architecture and a segment that buys once. Two planned pop-ups pause; the campus thesis stalls mid-pilot.", fb:"Your Implementation timeline needs a go/no-go gate per campus: what minimum first-suit conversion justifies the next pop-up? Put the threshold in the report."};
     }
   },
   {
@@ -578,7 +583,7 @@ const EVENT_SECTION = {
   fabric:"Implementation — risks &amp; mitigation",
   return_office:"Argument — market evidence",
   ai_misfit:"Implementation — risks &amp; mitigation",
-  showroom_econ:"Implementation — timeline &amp; gates",
+  popup_econ:"Implementation — timeline &amp; gates",
   copycat:"SWOT &amp; differentiation",
   b2b_churn:"Implementation — key-account risk",
   market_growth:"Conclusion — evidence of impact"
