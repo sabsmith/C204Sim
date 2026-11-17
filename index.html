@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuitShop Growth Lab — C204 Decision Simulator &amp; Stress Test</title>
+<style>
+:root{
+  --ink:#20263a; --paper:#f6f4ef; --card:#ffffff; --line:#ddd6c9;
+  --accent:#93402a; --accent-soft:#f3e4dd;
+  --ok:#2e6b4f; --ok-bg:#e6f1ea; --warn:#8a5416; --warn-bg:#f9eeda; --bad:#8f2d2d; --bad-bg:#f6e4e4;
+  --muted:#5d6472;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 22px 70px}
+.masthead{border-bottom:3px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+.kicker{font-family:Verdana,Arial,sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-size:2.1rem;line-height:1.12;margin:0 0 6px}
+.tagline{font-style:italic;color:var(--muted);margin:0}
+h2{font-size:1.35rem;margin:0 0 10px}
+h3{font-size:1.05rem;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:20px 22px;margin:0 0 18px}
+.intro ol{margin:8px 0 10px;padding-left:22px}
+.intro li{margin:6px 0}
+.fineprint{font-size:.85rem;color:var(--muted);font-style:italic;margin:10px 0 0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+.tabs button{font-family:Verdana,Arial,sans-serif;font-size:.82rem;font-weight:700;
+  padding:9px 14px;border-radius:999px;border:1.5px solid var(--line);
+  background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabs button:disabled{opacity:.45;cursor:not-allowed}
+.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+fieldset{border:1px solid var(--line);border-radius:10px;background:var(--card);
+  margin:0 0 16px;padding:14px 18px 16px}
+legend{font-family:Verdana,Arial,sans-serif;font-size:.85rem;font-weight:700;
+  padding:2px 8px;background:var(--accent-soft);border-radius:6px}
+.dim-hint{font-size:.9rem;color:var(--muted);margin:2px 0 10px;font-style:italic}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:8px}
+.opt:hover{background:#faf8f4}
+.opt input{margin-top:5px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.opt label{cursor:pointer}
+.opt b{display:block}
+.opt span.desc{display:block;font-size:.92rem;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+button.primary{font-family:Verdana,Arial,sans-serif;font-weight:700;font-size:.9rem;
+  background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px 18px;cursor:pointer}
+button.ghost{font-family:Verdana,Arial,sans-serif;font-weight:700;font-size:.9rem;
+  background:transparent;color:var(--accent);border:1.5px solid var(--accent);
+  border-radius:8px;padding:10px 16px;cursor:pointer}
+button.primary:focus-visible,button.ghost:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.msg{font-family:Verdana,Arial,sans-serif;font-size:.85rem;color:var(--bad);font-weight:700;min-height:1.2em}
+.scoregrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0 4px}
+.metric{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fbfaf7}
+.metric .mrow{display:flex;justify-content:space-between;font-family:Verdana,Arial,sans-serif;font-size:.8rem;font-weight:700}
+.bar{height:10px;background:#e9e4da;border-radius:6px;margin:7px 0 4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.delta{font-size:.78rem;font-family:Verdana,Arial,sans-serif;color:var(--muted)}
+.chip{display:inline-block;font-family:Verdana,Arial,sans-serif;font-size:.75rem;font-weight:700;
+  padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.neutral{background:#eceae4;color:var(--muted)}
+.gr-line{margin:6px 0}
+.event{border:1px solid var(--line);border-left:5px solid var(--muted);border-radius:8px;
+  background:var(--card);padding:14px 16px;margin:12px 0}
+.event.exposed{border-left-color:var(--bad)}
+.event.bruised{border-left-color:var(--warn)}
+.event.held{border-left-color:var(--ok)}
+.event .when{font-family:Verdana,Arial,sans-serif;font-size:.72rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.event h3{margin:2px 0 6px}
+.event .blurb{font-style:italic;color:var(--muted);margin:0 0 8px}
+.event ul{margin:6px 0 8px;padding-left:20px}
+.event li{margin:4px 0;font-size:.95rem}
+.fb{border-left:4px solid var(--accent);background:var(--accent-soft);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0}
+.fb .sec{font-family:Verdana,Arial,sans-serif;font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--accent)}
+.resil{display:flex;align-items:center;gap:18px;margin:14px 0}
+.resil .num{font-size:2.6rem;font-weight:700;line-height:1}
+.resil .band{font-family:Verdana,Arial,sans-serif;font-weight:700}
+table.mini{width:100%;border-collapse:collapse;font-size:.9rem;margin:8px 0}
+table.mini td,table.mini th{border:1px solid var(--line);padding:6px 9px;text-align:left}
+table.mini th{background:#f1ede5}
+details.about{margin:26px 0 0;font-size:.92rem;color:var(--muted)}
+details.about summary{cursor:pointer;font-family:Verdana,Arial,sans-serif;font-weight:700;color:var(--ink)}
+.colophon{border-top:1px solid var(--line);margin-top:30px;padding-top:14px;
+  font-size:.82rem;color:var(--muted)}
+@media print{
+  .tabs,.actions,.no-print,form,#panel-build,#panel-sim,#panel-stress,.intro,.about{display:none!important}
+  body{background:#fff;font-size:12pt}
+  .card,.event,.fb{border:1px solid #bbb}
+  #panel-report{display:block!important}
+  .wrap{max-width:none;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+  <p class="kicker">C204 Business Writing · Fall 2026 · SuitShop (EY) Case</p>
+  <h1>SuitShop Growth Lab</h1>
+  <p class="tagline">A decision simulator &amp; stress test for your recommendation report</p>
+</header>
+
+<section class="card intro" aria-labelledby="intro-h">
+  <h2 id="intro-h">How this works</h2>
+  <ol>
+    <li><strong>Build your strategy.</strong> Make the four core calls your report makes — growth engine, product and inventory, visibility, pricing.</li>
+    <li><strong>Run the simulation.</strong> See a three-year projection of what those choices produce, plus the client guardrails they protect or strain.</li>
+    <li><strong>Run the stress test.</strong> Six market shocks hit your strategy. Some you will shrug off. Some will hurt.</li>
+    <li><strong>Take the feedback.</strong> A consolidated list of the questions your client — and your professor — are most likely to ask, mapped to your report's sections.</li>
+  </ol>
+  <p class="fineprint">Runs entirely in your browser: nothing you choose is submitted, saved to Canvas, or sent anywhere. Outcomes are illustrative scenarios grounded in the Fall 2026 case — not forecasts.</p>
+</section>
+
+<nav class="tabs no-print" role="tablist" aria-label="Simulator steps">
+  <button role="tab" id="tab-build" aria-controls="panel-build" aria-selected="true" type="button">1 · Build strategy</button>
+  <button role="tab" id="tab-sim" aria-controls="panel-sim" aria-selected="false" type="button">2 · Simulation</button>
+  <button role="tab" id="tab-stress" aria-controls="panel-stress" aria-selected="false" type="button" disabled>3 · Stress test</button>
+  <button role="tab" id="tab-report" aria-controls="panel-report" aria-selected="false" type="button" disabled>4 · Feedback report</button>
+</nav>
+
+<main>
+<section role="tabpanel" id="panel-build" aria-labelledby="tab-build">
+  <div class="card">
+  <h2>Step 1 · Build your strategy</h2>
+  <p>Choose one option in each set. Choose what your report <em>actually</em> recommends — the simulator is only useful if it is testing the real thing.</p>
+  <form id="strategy-form"></form>
+  <p id="build-msg" class="msg" role="status"></p>
+  <div class="actions">
+    <button id="btn-run-sim" class="primary" type="button">Run the 3-year simulation →</button>
+    <button id="btn-reset" class="ghost" type="button">Reset all choices</button>
+  </div>
+  </div>
+</section>
+
+<section role="tabpanel" id="panel-sim" aria-labelledby="tab-sim" hidden>
+  <div class="card">
+  <h2>Step 2 · Three-year simulation</h2>
+  <div id="sim-results" aria-live="polite"></div>
+  <div class="actions">
+    <button id="btn-go-stress" class="primary" type="button">Run the stress test →</button>
+    <button id="btn-go-report1" class="ghost" type="button">Skip to the feedback report</button>
+  </div>
+  </div>
+</section>
+
+<section role="tabpanel" id="panel-stress" aria-labelledby="tab-stress" hidden>
+  <div class="card">
+  <h2>Step 3 · Stress test</h2>
+  <p>Six shocks arrive over three years, chosen because they matter for <em>your</em> strategy. Each one ends with a question your report should be ready to answer.</p>
+  <div id="stress-results" aria-live="polite"></div>
+  <div class="actions">
+    <button id="btn-run-stress" class="primary" type="button">Run the stress test</button>
+    <button id="btn-go-report2" class="ghost" type="button">Build my feedback report →</button>
+  </div>
+  </div>
+</section>
+
+<section role="tabpanel" id="panel-report" aria-labelledby="tab-report" hidden>
+  <div class="card">
+  <h2>Step 4 · Feedback report</h2>
+  <p class="fineprint">Bring this to your team debrief. Every prompt below points at a section of your final report.</p>
+  <div id="report-results" aria-live="polite"></div>
+  <div class="actions no-print">
+    <button id="btn-copy" class="primary" type="button">Copy feedback as text</button>
+    <button id="btn-print" class="ghost" type="button">Print / save as PDF</button>
+  </div>
+  <p id="copy-msg" class="msg no-print" role="status"></p>
+  </div>
+</section>
+</main>
+
+<details class="about">
+  <summary>About this simulator (for instructors &amp; the curious)</summary>
+  <p><strong>What it is.</strong> A deterministic, rules-based learning tool built for the C204 Fall 2026 SuitShop case. Students encode their recommendation as four strategic choices; a scoring engine projects six performance metrics, checks the client's three guardrails (affordable prices, lean inventory, a brand experience distinctly its own), detects synergies and conflicts between choices, and runs six market shocks drawn from the case's competitive landscape.</p>
+  <p><strong>What it is not.</strong> It is not a forecast, a grade, or an AI judge. Every outcome traces to explicit rules, so two teams making the same choices get the same feedback — which makes it a reliable discussion prompt rather than a verdict.</p>
+  <p><strong>Pedagogical intent.</strong> The feedback prompts map to the final report's required elements: the recommendation, the What/Why/How argument, implementation with risks and mitigation, and the pre/post SWOT. Students who run the simulator honestly should arrive at their team debrief with better questions, not answers.</p>
+</details>
+
+<footer class="colophon">
+  <p>SuitShop Growth Lab · Built for C204 Business Writing, Kelley School of Business · Fall 2026 SuitShop (EY) case.</p>
+</footer>
+</div>
+<script>
+"use strict";
+/* ================= SUITSHOP GROWTH LAB — DATA =================
+   All rules are deterministic: same choices -> same outcomes.
+   Guardrails from the case: affordable prices, lean inventory,
+   brand experience distinctly its own.                        */
+
+const DIMENSIONS = [
+  {
+    id: "engine", legend: "A · Primary growth engine",
+    hint: "Where should SuitShop aim its next big push? (Case directions, p. 4)",
+    options: [
+      { id: "young", label: "Younger, non-wedding customers",
+        desc: "First professional suits for new hires; SAE-style campus partnerships; lifestyle positioning." },
+      { id: "b2b", label: "B2B and corporate programs",
+        desc: "Repeatable contracts: chauffeur and driver services, hospitality, funeral homes, small airlines." },
+      { id: "wedding", label: "Deepen the wedding core",
+        desc: "Own same-sex and gender-inclusive weddings; group coordination as the moat; planner channel." },
+      { id: "hybrid", label: "Wedding core + one new audience",
+        desc: "Protect the core while piloting a second segment (youth or B2B) with a small dedicated team." }
+    ]
+  },
+  {
+    id: "product", legend: "B · Product line & inventory",
+    hint: "How should the assortment grow while inventory stays lean?",
+    options: [
+      { id: "capsule", label: "Curated capsule collections",
+        desc: "Limited drops with partner brands (Tie Bar x Laura Ashley model); test small, reorder only winners." },
+      { id: "lifestyle", label: "Everyday lifestyle pieces",
+        desc: "Stretch toward shirts, knitwear, outerwear worn with (and without) a suit; broader SKU count." },
+      { id: "mto", label: "Expand Made-to-Order",
+        desc: "One-off and custom pieces; higher price points, no inventory risk, but slower fulfillment." },
+      { id: "core", label: "Deepen core suiting only",
+        desc: "More colors and fits in proven Eco Stretch lines; lowest risk, least novelty." }
+    ]
+  },
+  {
+    id: "visibility", legend: "C · Visibility & loyalty",
+    hint: "How do new customers find SuitShop on a lean marketing budget?",
+    options: [
+      { id: "loyalty", label: "Launch a loyalty program",
+        desc: "Rewards for repeat buyers and wedding-party alumni; first program in the category." },
+      { id: "influencer", label: "Influencer & event engine",
+        desc: "Double down on donations, organic reach, and press; scale what already works." },
+      { id: "showrooms", label: "Accelerate showrooms",
+        desc: "Open 3-4 locations a year instead of 2-3; physical presence lifts regional sales." },
+      { id: "ai", label: "AI-guided shopping",
+        desc: "Expand the chatbot into fit guidance and AI-generated product pages; cheap reach, brand risk." }
+    ]
+  },
+  {
+    id: "pricing", legend: "D · Pricing & affordability",
+    hint: "The case's first guardrail is affordability. What's your stance?",
+    options: [
+      { id: "hold", label: "Hold the line under $200",
+        desc: "Everyday affordability stays sacred; absorb cost pressure in margin." },
+      { id: "tier", label: "Good-better-best tiers",
+        desc: "Keep entry suits under $200; add premium tiers (MTO, premium fabrics) above." },
+      { id: "bundle", label: "Bundle for groups",
+        desc: "Group pricing, planner discounts, groom-free incentives; trade margin for volume." },
+      { id: "premium", label: "Premium repositioning",
+        desc: "Nudge prices up to fund quality and service; risk to the affordability promise." }
+    ]
+  }
+];
+
+const METRICS = [
+  { id:"reach",   label:"New customer reach",   sub:"new buyers acquired per year, indexed" },
+  { id:"repeat",  label:"Repeat & loyalty",     sub:"alumni customers who buy again" },
+  { id:"margin",  label:"Gross margin",         sub:"after discounts and program costs" },
+  { id:"inv",     label:"Inventory health",     sub:"lean-inventory guardrail (100 = lean)" },
+  { id:"brand",   label:"Brand distinctiveness",sub:"guardrail: experience still SuitShop's own" },
+  { id:"ops",     label:"Operational load",     sub:"strain on a lean team (100 = comfortable)" }
+];
+
+/* Base multipliers per option, per metric. 1.0 = no change.
+   Numbers are illustrative, tuned to the case narrative. */
+const OPT_EFFECTS = {
+  engine: {
+    young:   { reach:1.30, repeat:0.90, margin:1.00, inv:1.00, brand:1.05, ops:1.10 },
+    b2b:     { reach:1.15, repeat:1.25, margin:1.10, inv:1.00, brand:1.00, ops:1.20 },
+    wedding: { reach:1.05, repeat:1.20, margin:1.05, inv:1.00, brand:1.10, ops:1.00 },
+    hybrid:  { reach:1.18, repeat:1.08, margin:1.02, inv:1.00, brand:1.05, ops:1.12 }
+  },
+  product: {
+    capsule:  { reach:1.10, repeat:1.05, margin:1.05, inv:1.05, brand:1.10, ops:1.05 },
+    lifestyle:{ reach:1.20, repeat:1.10, margin:0.90, inv:0.80, brand:0.95, ops:1.25 },
+    mto:      { reach:0.95, repeat:1.15, margin:1.20, inv:1.10, brand:1.05, ops:1.15 },
+    core:     { reach:1.00, repeat:1.00, margin:1.00, inv:1.10, brand:1.00, ops:1.00 }
+  },
+  visibility: {
+    loyalty:   { reach:1.05, repeat:1.30, margin:0.95, inv:1.00, brand:1.05, ops:1.10 },
+    influencer:{ reach:1.20, repeat:1.00, margin:1.00, inv:1.00, brand:1.10, ops:1.00 },
+    showrooms:{ reach:1.25, repeat:1.05, margin:0.85, inv:1.00, brand:1.05, ops:1.30 },
+    ai:        { reach:1.15, repeat:1.00, margin:1.05, inv:1.00, brand:0.85, ops:1.05 }
+  },
+  pricing: {
+    hold:    { reach:1.05, repeat:1.05, margin:0.90, inv:1.00, brand:1.10, ops:1.00 },
+    tier:    { reach:1.00, repeat:1.05, margin:1.15, inv:1.00, brand:1.00, ops:1.05 },
+    bundle:  { reach:1.20, repeat:1.10, margin:0.85, inv:1.05, brand:1.05, ops:1.10 },
+    premium: { reach:0.85, repeat:0.95, margin:1.25, inv:1.00, brand:0.90, ops:1.00 }
+  }
+};
+
+/* Synergy and conflict rules: [engine, product, visibility, pricing] */
+const COMBOS = [
+  { when:{engine:"young", visibility:"influencer"}, kind:"syn", text:"Campus ambassadors + influencer engine reinforce each other: organic reach compounds among students who trust peers over ads." },
+  { when:{engine:"b2b", pricing:"tier"}, kind:"syn", text:"Corporate contracts at tiered price points create predictable B2B revenue that smooths seasonal wedding swings." },
+  { when:{engine:"wedding", product:"capsule"}, kind:"syn", text:"Capsule collections give wedding parties coordinated accessories — raising average order value without new inventory categories." },
+  { when:{engine:"hybrid", visibility:"showrooms"}, kind:"conf", text:"Piloting a new audience while accelerating showrooms splits a lean team's attention and capital; both moves slow down." },
+  { when:{product:"lifestyle", pricing:"hold"}, kind:"conf", text:"Lifestyle pieces carry thinner margins than suiting; holding prices under $200 while expanding SKUs squeezes cash for reorders." },
+  { when:{product:"lifestyle", visibility:"showrooms"}, kind:"conf", text:"More SKUs across more showrooms is the classic lean-inventory trap: stock depth per location falls or carrying costs climb." },
+  { when:{visibility:"ai", pricing:"premium"}, kind:"conf", text:"AI-guided shopping trained on wedding-party data will misfire on premium buyers; expect fit errors and returns to climb." },
+  { when:{engine:"b2b", product:"mto"}, kind:"conf", text:"B2B buyers need uniform, repeatable orders; Made-to-Order lead times clash with corporate procurement timelines." },
+  { when:{visibility:"loyalty", engine:"young"}, kind:"syn", text:"A first-of-its-kind loyalty program gives students a reason to return for the second suit — the career one — not just the first." },
+  { when:{pricing:"premium", engine:"wedding"}, kind:"conf", text:"Wedding parties compare total cost across five to ten members; premium pricing pushes group coordinators toward rental rivals." }
+];
+
+/* ================= STRESS TEST EVENTS =================
+   Each event: id, when, title, blurb, applies(strategy)->bool,
+   outcome: 'held' | 'bruised' | 'exposed', and text.
+   Explanations reference the student's actual choices. */
+const EVENTS = [
+  {
+    id:"rental", when:"Year 1 · Q2",
+    title:"The rental giants fight back on price",
+    blurb:"Men's Wearhouse relaunches wedding packages at aggressive rental discounts, targeting group coordinators.",
+    applies:s=>true,
+    outcome:s=>{
+      if(s.engine==="wedding" && s.pricing==="bundle") return {k:"held", t:"Your group bundling and wedding focus mean coordinators comparing total cost still land on SuitShop. The discount war mostly passes you by.", fb:"Your report should quantify the group economics: show the five-plus-one math against a rental quote so the comparison is concrete."};
+      if(s.pricing==="premium") return {k:"exposed", t:"With prices nudged up, the rental counter-offer is now dramatically cheaper per person. Group coordinators — your most price-sensitive buyers — defect first.", fb:"Address the price-gap objection head-on in the Argument section: what does the premium buy that a rental cannot?"};
+      if(s.engine==="b2b") return {k:"held", t:"Corporate contracts don't shop rental counters. Your B2B revenue is insulated from the wedding price war — but that insulation is only a virtue if B2B is genuinely scalable.", fb:"Say explicitly what share of revenue B2B could plausibly reach in year three, and cite comparable corporate-clothing programs."};
+      return {k:"bruised", t:"A few group bookings wobble during the discount window. Word-of-mouth holds most of your pipeline, but the episode is a reminder that rental rivals can always buy share temporarily.", fb:"Add a sentence to Implementation acknowledging promotional counter-moves and how you'd respond without breaking the affordability promise."};
+    }
+  },
+  {
+    id:"competitor_loyalty", when:"Year 1 · Q4",
+    title:"A competitor launches the loyalty program first",
+    blurb:"Generation Tux rolls out a points-based rewards program with a splashy wedding-season campaign.",
+    applies:s=>true,
+    outcome:s=>{
+      if(s.visibility==="loyalty") return {k:"bruised", t:"Your program is no longer a first — the press angle is gone. But second-mover programs can copy mechanics and fix mistakes: yours can still be the one that fits SuitShop's brand.", fb:"The Recommendation should not rest on 'first loyalty program in suiting.' Rest it on why rewards fit SuitShop's customer relationships specifically."};
+      if(s.visibility==="influencer") return {k:"held", t:"You never bet on loyalty; your influencer and event engine is untouched. The competitor's program costs them margin every quarter — watch whether it survives year two.", fb:"Consider a line noting you deliberately skipped loyalty: what evidence says organic reach beats paid retention for this brand?"};
+      return {k:"bruised", t:"Without a loyalty play of your own, repeat wedding-party alumni have a new reason to join a competitor's ecosystem. Your repeat rate dips among 2025's customers.", fb:"If you argue loyalty isn't worth it, defend that choice in the counterarguments section — the client is clearly interested (the case says so)."};
+    }
+  },
+  {
+    id:"fabric", when:"Year 2 · Q1",
+    title:"Eco Stretch fabric cost jumps",
+    blurb:"Your supplier raises fabric costs 18% after a poor harvest season; competitors lock in multi-year contracts.",
+    applies:s=>true,
+    outcome:s=>{
+      if(s.pricing==="tier"||s.pricing==="premium") return {k:"held", t:"Higher price tiers absorb the fabric increase without touching the entry price point. Margin dips a point, then recovers.", fb:"Show this resilience in the report: a tiered structure is a hedge, and your Implementation timeline should say when tiers launch relative to supplier contracts."};
+      if(s.pricing==="hold") return {k:"bruised", t:"You eat the increase to keep the sub-$200 promise. Margin compresses for two quarters; a lean team feels every point.", fb:"Name the trade-off explicitly: what does holding $200 cost in margin, and how long could you sustain it? 'Affordable' needs a number behind it."};
+      if(s.pricing==="bundle") return {k:"exposed", t:"Bundling already trades margin for volume; the fabric increase stacks on top. Two quarters of near-breakeven group sales force an unplanned price test.", fb:"Stress-test your own bundle math: at what discount depth does a five-person group stop being profitable? Put the sensitivity in the appendix."};
+      return {k:"bruised", t:"Margin dips while you decide between absorbing costs or re-pricing. No permanent damage, but the episode exposes how little pricing flexibility you built in.", fb:"Your recommendation should include a contingency: which lever moves first if input costs spike?"};
+    }
+  },
+  {
+    id:"return_office", when:"Year 2 · Q3",
+    title:"Return-to-office stalls",
+    blurb:"Several large employers announce permanent hybrid-lite policies; 'first professional suit' demand softens in your growth forecasts.",
+    applies:s=>s.engine==="young",
+    outcome:s=>{
+      if(s.engine==="young" && s.visibility==="influencer") return {k:"bruised", t:"Campus-first demand cools just as your ambassador cohort matures. The influencer engine keeps reach up but conversion of first-suit buyers dips.", fb:"Your market-size claim for young professionals needs a sensitivity range. What share of the segment still needs occasion suits (weddings, interviews, promotions) regardless of office policy?"};
+      if(s.engine==="young" && s.product==="lifestyle") return {k:"held", t:"Lifestyle pieces were never office-dependent — the wardrobe extension carries the year while first-suit demand lags. Your two-part bet diversifies the risk.", fb:"This is a strong argument for the lifestyle pairing: make the diversification logic explicit in the What/Why/How rather than leaving readers to infer it."};
+      return {k:"bruised", t:"The young-professional thesis takes a direct hit. Reach flattens; the segment you chose as the growth engine proves softer than projected.", fb:"Hedge the thesis in the report: cite return-to-office data both ways, and show what happens to the recommendation if office-wear demand grows at half the projected rate."};
+    }
+  },
+  {
+    id:"ai_misfit", when:"Year 2 · Q4",
+    title:"The AI shopping assistant misfires",
+    blurb:"Scaled-up AI fit guidance recommends wrong sizes for non-standard body types; complaints spike and a viral thread mocks the brand's inclusivity promise.",
+    applies:s=>s.visibility==="ai"||s.product==="lifestyle",
+    outcome:s=>{
+      if(s.visibility==="ai") return {k:"exposed", t:"The tool you scaled becomes the story. For a brand whose identity is inclusive fit, an AI that fails on diverse bodies is a brand-distinctiveness crisis, not a tech bug.", fb:"If AI-guided shopping is in your recommendation, the Implementation section must include training-data limits, human handoff, and a rollback plan. Address the inclusivity objection before the client asks."};
+      return {k:"bruised", t:"The episode lands industry-wide. Broader lifestyle SKUs mean more fit variables, and your exchange volume ticks up during the noise.", fb:"Use this in the counterargument section: broader assortment raises fit complexity. What in your plan keeps exchanges free and easy — the actual brand promise?"};
+    }
+  },
+  {
+    id:"showroom_econ", when:"Year 3 · Q1",
+    title:"Showroom economics tighten",
+    blurb:"Retail rents in growth cities rise sharply; two competitors quietly close their own showrooms.",
+    applies:s=>s.visibility==="showrooms",
+    outcome:s=>{
+      if(s.pricing==="tier"||s.pricing==="premium") return {k:"held", t:"Higher-margin tiers cushion the rent increase. Your showrooms stay open, but the episode proves they are only affordable with margin structure behind them.", fb:"Connect the dots in the Argument: showrooms + premium tiers is a package deal. If you recommend both, say the quiet part — one funds the other."};
+      return {k:"exposed", t:"Rent inflation lands on a sub-$200 price architecture. Two planned openings pause; the 'showrooms lift regional sales' thesis stalls mid-build-out.", fb:"Your Implementation timeline needs a go/no-go gate per location: what minimum regional sales lift justifies the next lease? Put the threshold in the report."};
+    }
+  },
+  {
+    id:"copycat", when:"Year 3 · Q2",
+    title:"A wedding rival goes inclusive",
+    blurb:"Birdy Grey launches a full unisex and same-sex wedding line, marketing directly to couples SuitShop considered its core.",
+    applies:s=>true,
+    outcome:s=>{
+      if(s.engine==="wedding" && s.product==="capsule") return {k:"held", t:"The copycat can match a line, not a decade of fit data and group-coordination service. Capsule accessories deepen the moat: couples now coordinate everything in one order.", fb:"Make the moat concrete: what exactly does SuitShop have that a fast follower cannot replicate in a season? Name it in the Recommendation."};
+      if(s.engine==="wedding") return {k:"bruised", t:"Your core market gets contested for the first time. Differentiation now rests on service and fit history — real advantages, but ones you must articulate before the client feels the squeeze.", fb:"The pre/post SWOT should show this shift: what was a strength (inclusive core) becomes contested space. What's the next differentiator?"};
+      if(s.engine==="b2b"||s.engine==="young") return {k:"held", t:"You diversified away from the wedding core, so the copycat attack lands on ground you already left. Your bet on a second engine looks prescient — if that engine is performing.", fb:"Note the irony in your risk section: diversification was partly a hedge against core-market competition. Did your chosen engine earn its keep by year three?"};
+      return {k:"bruised", t:"The hybrid strategy means you're defending the core and building the new segment at once. The copycat forces core-defense spending you hadn't planned.", fb:"Your Implementation plan should sequence the two fronts: which gets resources first, and what triggers the switch?"};
+    }
+  },
+  {
+    id:"b2b_churn", when:"Year 3 · Q3",
+    title:"Anchor B2B account churns",
+    blurb:"A national chauffeur service — the reference account for corporate suiting — switches to a uniform competitor on a bulk contract.",
+    applies:s=>s.engine==="b2b",
+    outcome:s=>{
+      if(s.product==="mto") return {k:"exposed", t:"The churn hits hardest because MTO lead times already strained the relationship's reorder cycle. Two B2B weaknesses compound: concentration risk and fulfillment speed.", fb:"If B2B + MTO is your pairing, the report needs a concentration-risk mitigation: how many anchor accounts before the portfolio is safe, and what's the reorder SLA?"};
+      if(s.pricing==="bundle") return {k:"bruised", t:"You'd trained the account on group discounts; the competitor's bulk contract undercuts you. B2B buyers are loyal to terms, not brands.", fb:"B2B retention economics deserve a paragraph: contract length, renewal incentives, and what makes corporate clients sticky beyond price."};
+      return {k:"bruised", t:"Losing the reference account dents credibility in the segment just as you're scaling it. Pipeline conversations stall for a quarter.", fb:"Address key-account risk in Implementation: reference customers are assets and single points of failure. What's the diversification target?"};
+    }
+  },
+  {
+    id:"market_growth", when:"Year 3 · Q4",
+    title:"The category grows faster than forecast",
+    blurb:"Suit market growth lands at the high end of projections; new entrants multiply, but so does customer demand.",
+    applies:s=>true,
+    outcome:s=>{
+      if(s.product==="core") return {k:"bruised", t:"A rising tide, and you brought a narrow boat. Core-only depth means the new demand flows to brands with fresher assortments.", fb:"If you recommend deepening the core, defend it against the 'rising tide, narrow boat' critique: why is depth the right call in a boom?"};
+      if(s.inv>=100 && s.ops<=105) return {k:"held", t:"Lean inventory and a comfortable operational load mean you can chase the surge without overextending — the disciplined strategy is suddenly the agile one.", fb:"This is your closing argument: the guardrails aren't constraints, they're the growth strategy. Say so in the Conclusion."};
+      return {k:"held", t:"Demand growth lifts all boats, including yours. The strain shows — but growth buys you room to fix it.", fb:"Growth hides problems. Your report should distinguish which metrics improved because of your strategy versus because of the market. The client will ask."};
+    }
+  }
+];
+
+/* ================= ENGINE ================= */
+const state = { strategy:null, metrics:null, simRun:false, stressRun:false, stress:null };
+
+function buildForm(){
+  const form = document.getElementById("strategy-form");
+  form.innerHTML = DIMENSIONS.map(d =>
+    '<fieldset><legend>'+d.legend+'</legend><p class="dim-hint">'+d.hint+'</p>'+
+    d.options.map((o,i) =>
+      '<div class="opt"><input type="radio" id="'+d.id+'-'+o.id+'" name="'+d.id+'" value="'+o.id+'">'+
+      '<label for="'+d.id+'-'+o.id+'"><b>'+o.label+'</b><span class="desc">'+o.desc+'</span></label></div>'
+    ).join("")+'</fieldset>'
+  ).join("");
+}
+
+function readStrategy(){
+  const s = {};
+  for(const d of DIMENSIONS){
+    const sel = document.querySelector('input[name="'+d.id+'"]:checked');
+    if(!sel) return null;
+    s[d.id] = sel.value;
+  }
+  return s;
+}
+
+function labelOf(dimId, optId){
+  const d = DIMENSIONS.find(x=>x.id===dimId);
+  return d.options.find(o=>o.id===optId).label;
+}
+
+function computeMetrics(s){
+  const m = { reach:100, repeat:100, margin:100, inv:100, brand:100, ops:100 };
+  for(const dimId of ["engine","product","visibility","pricing"]){
+    const eff = OPT_EFFECTS[dimId][s[dimId]];
+    for(const k in m) m[k] *= eff[k];
+  }
+  /* combo adjustments */
+  let synCount=0, confCount=0;
+  for(const c of COMBOS){
+    const match = Object.keys(c.when).every(k => s[k]===c.when[k]);
+    if(!match) continue;
+    if(c.kind==="syn"){ m.reach*=1.04; synCount++; } else { m.ops*=1.06; m.inv*=0.96; confCount++; }
+  }
+  for(const k in m) m[k] = Math.round(m[k]);
+  return { m, synCount, confCount };
+}
+
+function chip(kind, text){ return '<span class="chip '+kind+'">'+text+'</span>'; }
+
+function metricCard(id, label, sub, val, invert){
+  const delta = val-100;
+  let cls="neutral", word="stable";
+  const good = invert ? delta<=0 : delta>=0;
+  const big = Math.abs(delta);
+  if(big<3){ cls="neutral"; word="about flat"; }
+  else if(good && big>=10){ cls="ok"; word="strong gain"; }
+  else if(good){ cls="ok"; word="modest gain"; }
+  else if(!good && big>=10){ cls="bad"; word="real strain"; }
+  else { cls="warn"; word="some strain"; }
+  const pct = Math.max(4, Math.min(100, invert ? Math.max(0,200-val)/2 : val));
+  return '<div class="metric"><div class="mrow"><span>'+label+'</span><span>'+val+'</span></div>'+
+    '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="delta">'+word+' vs. today ('+(delta>=0?'+':'')+delta+') · '+sub+'</div></div>';
+}
+
+function guardrailChecks(s, m){
+  const g = [];
+  g.push({ name:"Affordable prices", ok: s.pricing!=="premium",
+    note: s.pricing==="premium" ? "Premium repositioning puts the sub-$200 promise at risk — the case calls affordability a guardrail." : "Pricing stance keeps the affordability promise intact." });
+  g.push({ name:"Lean inventory", ok: m.inv>=90,
+    note: m.inv>=90 ? "Assortment choices keep inventory within lean territory." : "Projected inventory health ("+m.inv+") strains the lean-inventory guardrail. How will you manage SKU depth?" });
+  g.push({ name:"Brand distinctly its own", ok: m.brand>=92,
+    note: m.brand>=92 ? "Choices protect the inclusive, service-led brand experience." : "Projected brand distinctiveness ("+m.brand+") suggests dilution. What keeps the experience SuitShop's own?" });
+  return g;
+}
+
+function runSim(){
+  const s = readStrategy();
+  const msg = document.getElementById("build-msg");
+  if(!s){ msg.textContent = "Choose one option in each set (A–D) before running."; return; }
+  msg.textContent = "";
+  state.strategy = s;
+  const { m, synCount, confCount } = computeMetrics(s);
+  state.metrics = m;
+  state.simRun = true;
+
+  let html = '<h3>Your strategy</h3><ul>'+
+    '<li><strong>Growth engine:</strong> '+labelOf("engine",s.engine)+'</li>'+
+    '<li><strong>Product &amp; inventory:</strong> '+labelOf("product",s.product)+'</li>'+
+    '<li><strong>Visibility &amp; loyalty:</strong> '+labelOf("visibility",s.visibility)+'</li>'+
+    '<li><strong>Pricing:</strong> '+labelOf("pricing",s.pricing)+'</li></ul>';
+
+  html += '<h3>Three-year projection</h3><div class="scoregrid">';
+  html += metricCard("reach","New customer reach","new buyers per year, indexed",m.reach,false);
+  html += metricCard("repeat","Repeat &amp; loyalty","alumni customers who buy again",m.repeat,false);
+  html += metricCard("margin","Gross margin","after discounts and program costs",m.margin,false);
+  html += metricCard("inv","Inventory health","lean guardrail (100 = lean)",m.inv,false);
+  html += metricCard("brand","Brand distinctiveness","guardrail: still SuitShop's own",m.brand,false);
+  html += metricCard("ops","Operational load","strain on a lean team (100 = comfortable)",m.ops,true);
+  html += '</div>';
+
+  const g = guardrailChecks(s,m);
+  html += '<h3>Client guardrails</h3>';
+  for(const item of g){
+    html += '<p class="gr-line">'+chip(item.ok?"ok":"bad", item.ok?"Held":"Strained")+' <strong>'+item.name+'</strong> — '+item.note+'</p>';
+  }
+  state.guardrails = g;
+
+  const matched = COMBOS.filter(c => Object.keys(c.when).every(k => s[k]===c.when[k]));
+  if(matched.length){
+    html += '<h3>How your choices interact</h3>';
+    for(const c of matched){
+      html += '<p class="gr-line">'+chip(c.kind==="syn"?"ok":"warn", c.kind==="syn"?"Synergy":"Tension")+' '+c.text+'</p>';
+    }
+  } else {
+    html += '<p class="gr-line">'+chip("neutral","Independent")+' Your four choices mostly operate independently — no strong synergies or conflicts detected.</p>';
+  }
+
+  html += '<table class="mini"><caption class="sr-only" style="position:absolute;left:-9999px">Metric comparison</caption>'+
+    '<tr><th scope="col">Metric</th><th scope="col">Today</th><th scope="col">Year 3 projection</th></tr>'+
+    METRICS.map(mt=>'<tr><td>'+mt.label+'</td><td>100</td><td>'+m[mt.id]+'</td></tr>').join("")+'</table>';
+
+  html += '<p class="fineprint">Illustrative projection, not a forecast. The value of this screen is in <em>why</em> each number moves — the reasoning is what belongs in your report.</p>';
+
+  document.getElementById("sim-results").innerHTML = html;
+  document.getElementById("tab-stress").disabled = false;
+  switchTab("sim");
+}
+
+function runStress(){
+  if(!state.simRun) return;
+  const s = Object.assign({}, state.strategy);
+  s.inv = state.metrics.inv; s.ops = state.metrics.ops;
+  const hits = EVENTS.filter(e=>e.applies(s));
+  const counts = { held:0, bruised:0, exposed:0 };
+  let html = "";
+  const stressDetail = [];
+  for(const e of hits){
+    const out = e.outcome(s);
+    counts[out.k]++;
+    const cls = out.k==="held"?"held":(out.k==="bruised"?"bruised":"exposed");
+    const chipTxt = out.k==="held"?"Held up":(out.k==="bruised"?"Bruised":"Exposed");
+    html += '<article class="event '+cls+'"><p class="when">'+e.when+'</p><h3>'+e.title+'</h3>'+
+      '<p class="blurb">'+e.blurb+'</p>'+
+      '<p>'+chip(out.k,chipTxt)+' '+out.t+'</p>'+
+      '<div class="fb"><span class="sec">For your report</span><p style="margin:4px 0 0">'+out.fb+'</p></div></article>';
+    stressDetail.push({ title:e.title, when:e.when, kind:out.k, text:out.t, fb:out.fb, sec:EVENT_SECTION[e.id]||"Argument" });
+  }
+  const score = Math.max(0, 100 - counts.exposed*18 - counts.bruised*8);
+  const band = score>=85 ? "Holds strong" : (score>=65 ? "Bends but holds" : "Under real pressure");
+  const bandCls = score>=85 ? "ok" : (score>=65 ? "warn" : "bad");
+  html = '<div class="resil"><div class="num">'+score+'</div><div><div class="band">'+band+'</div>'+
+    '<div class="delta">'+counts.held+' held · '+counts.bruised+' bruised · '+counts.exposed+' exposed, across '+hits.length+' shocks</div></div></div>' + html;
+  document.getElementById("stress-results").innerHTML = html;
+  state.stress = { score, band, counts, detail:stressDetail };
+  state.stressRun = true;
+  document.getElementById("tab-report").disabled = false;
+  switchTab("stress");
+}
+
+const EVENT_SECTION = {
+  rental:"Argument — counterarguments",
+  competitor_loyalty:"Recommendation — differentiation claim",
+  fabric:"Implementation — risks &amp; mitigation",
+  return_office:"Argument — market evidence",
+  ai_misfit:"Implementation — risks &amp; mitigation",
+  showroom_econ:"Implementation — timeline &amp; gates",
+  copycat:"SWOT &amp; differentiation",
+  b2b_churn:"Implementation — key-account risk",
+  market_growth:"Conclusion — evidence of impact"
+};
+
+function buildReport(){
+  if(!state.simRun) return;
+  const s = state.strategy, m = state.metrics;
+  const g = state.guardrails || guardrailChecks(s,m);
+  let items = [];
+  const matched = COMBOS.filter(c => Object.keys(c.when).every(k => s[k]===c.when[k]));
+  for(const c of matched){
+    items.push({ sec: c.kind==="syn" ? "Argument — why this works" : "Argument — trade-offs",
+      text: c.text + " Make sure the report takes a position on this interaction rather than leaving readers to infer it." });
+  }
+  for(const item of g){ if(!item.ok) items.push({ sec:"Recommendation — guardrails", text:item.note }); }
+  if(state.stress){
+    for(const d of state.stress.detail){ items.push({ sec:d.sec, text:d.fb }); }
+  }
+  /* dedupe by text */
+  const seen = new Set(); items = items.filter(i => !seen.has(i.text) && seen.add(i.text));
+
+  let html = '<h3>Your tested strategy</h3><ul>'+
+    '<li>'+labelOf("engine",s.engine)+' · '+labelOf("product",s.product)+' · '+labelOf("visibility",s.visibility)+' · '+labelOf("pricing",s.pricing)+'</li></ul>';
+  if(state.stress){
+    html += '<p>'+chip(state.stress.score>=85?"ok":(state.stress.score>=65?"warn":"bad"), "Resilience "+state.stress.score+"/100")+
+      ' '+state.stress.counts.held+' held · '+state.stress.counts.bruised+' bruised · '+state.stress.counts.exposed+' exposed</p>';
+  }
+  html += '<h3>Questions your report should answer</h3>';
+  if(items.length===0){
+    html += '<p>No red flags fired for this combination. The deeper test: can your report defend the strategy against the objections in the case — price wars, copycats, cost spikes — even though the simulator did not trigger them?</p>';
+  } else {
+    html += items.map(i=>'<div class="fb"><span class="sec">'+i.sec+'</span><p style="margin:4px 0 0">'+i.text+'</p></div>').join("");
+  }
+  html += '<h3>Guardrail status</h3>';
+  for(const item of g){
+    html += '<p class="gr-line">'+chip(item.ok?"ok":"bad", item.ok?"Held":"Strained")+' <strong>'+item.name+'</strong> — '+item.note+'</p>';
+  }
+  document.getElementById("report-results").innerHTML = html;
+  switchTab("report");
+}
+
+function copyReport(){
+  const s = state.strategy; if(!s) return;
+  const lines = [];
+  lines.push("SUITSHOP GROWTH LAB — FEEDBACK REPORT");
+  lines.push("Strategy: "+labelOf("engine",s.engine)+" | "+labelOf("product",s.product)+" | "+labelOf("visibility",s.visibility)+" | "+labelOf("pricing",s.pricing));
+  if(state.stress) lines.push("Stress test resilience: "+state.stress.score+"/100 ("+state.stress.band+") — "+state.stress.counts.held+" held, "+state.stress.counts.bruised+" bruised, "+state.stress.counts.exposed+" exposed");
+  lines.push("");
+  lines.push("QUESTIONS YOUR REPORT SHOULD ANSWER");
+  document.querySelectorAll("#report-results .fb").forEach(el=>{
+    const sec = el.querySelector(".sec").textContent;
+    const txt = el.querySelector("p").textContent;
+    lines.push("- ["+sec+"] "+txt);
+  });
+  lines.push("");
+  lines.push("GUARDRAIL STATUS");
+  document.querySelectorAll("#report-results .gr-line").forEach(el=>{
+    lines.push("- "+el.textContent.trim());
+  });
+  lines.push("");
+  lines.push("Generated by the SuitShop Growth Lab (C204, Fall 2026). Illustrative scenarios, not forecasts.");
+  const text = lines.join("\n");
+  const done = ()=>{ const m=document.getElementById("copy-msg"); m.textContent="Copied. Paste it into your team's shared doc."; setTimeout(()=>m.textContent="",4000); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else { fallbackCopy(text,done); }
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement("textarea"); ta.value=text;
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ================= UI WIRING ================= */
+function switchTab(id){
+  for(const t of ["build","sim","stress","report"]){
+    document.getElementById("tab-"+t).setAttribute("aria-selected", t===id ? "true":"false");
+    document.getElementById("panel-"+t).hidden = (t!==id);
+  }
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+document.getElementById("tab-build").addEventListener("click",()=>switchTab("build"));
+document.getElementById("tab-sim").addEventListener("click",()=>{ if(state.simRun) switchTab("sim"); });
+document.getElementById("tab-stress").addEventListener("click",()=>{ if(state.simRun) switchTab("stress"); });
+document.getElementById("tab-report").addEventListener("click",()=>{ if(state.simRun) buildReport(); });
+document.getElementById("btn-run-sim").addEventListener("click", runSim);
+document.getElementById("btn-go-stress").addEventListener("click", ()=>switchTab("stress"));
+document.getElementById("btn-run-stress").addEventListener("click", runStress);
+document.getElementById("btn-go-report1").addEventListener("click", buildReport);
+document.getElementById("btn-go-report2").addEventListener("click", buildReport);
+document.getElementById("btn-copy").addEventListener("click", copyReport);
+document.getElementById("btn-print").addEventListener("click", ()=>window.print());
+document.getElementById("btn-reset").addEventListener("click", ()=>{
+  document.getElementById("strategy-form").reset();
+  state.strategy=null; state.metrics=null; state.simRun=false; state.stressRun=false; state.stress=null;
+  document.getElementById("sim-results").innerHTML=""; document.getElementById("stress-results").innerHTML="";
+  document.getElementById("report-results").innerHTML="";
+  document.getElementById("tab-stress").disabled=true; document.getElementById("tab-report").disabled=true;
+  switchTab("build");
+});
+buildForm();
+</script>
+</body>
+</html>
